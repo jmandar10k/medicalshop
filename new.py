@@ -5,25 +5,37 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 import ssl
+import tempfile
 
 # Load environment variables
 load_dotenv()
 
 def get_db_connection():
-    # Create SSL context
-    ssl_context = ssl.create_default_context()
-    ssl_context.verify_mode = ssl.CERT_REQUIRED
-    
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT", 3306)),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        ssl_ca="ca.pem",  # You'll need to download this from Aiven
-        ssl_verify_cert=True,
-        ssl_disabled=False
-    )
+    # Create a temporary file for the CA certificate
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pem') as tmp:
+        # Write the certificate from secrets to the temporary file
+        tmp.write(st.secrets["CA_CERT"].encode())
+        tmp.flush()
+        
+        # Create SSL context
+        ssl_context = ssl.create_default_context()
+        ssl_context.verify_mode = ssl.CERT_REQUIRED
+        
+        # Connect to the database
+        conn = mysql.connector.connect(
+            host=st.secrets["DB_HOST"],
+            port=int(st.secrets["DB_PORT"]),
+            user=st.secrets["DB_USER"],
+            password=st.secrets["DB_PASSWORD"],
+            database=st.secrets["DB_NAME"],
+            ssl_ca=tmp.name,
+            ssl_verify_cert=True,
+            ssl_disabled=False
+        )
+        
+        # Clean up the temporary file
+        os.unlink(tmp.name)
+        return conn
 
 # Set page configuration
 st.set_page_config(
