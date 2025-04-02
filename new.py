@@ -15,11 +15,11 @@ def get_db_connection():
     try:
         # Connect to the database
         conn = mysql.connector.connect(
-            host=st.secrets["DB_HOST"],
-            port=int(st.secrets["DB_PORT"]),
-            user=st.secrets["DB_USER"],
-            password=st.secrets["DB_PASSWORD"],
-            database=st.secrets["DB_NAME"],
+            host=st.secrets.mysql.host,
+            port=st.secrets.mysql.port,
+            user=st.secrets.mysql.user,
+            password=st.secrets.mysql.password,
+            database=st.secrets.mysql.database,
             ssl_disabled=False
         )
         return conn
