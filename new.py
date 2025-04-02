@@ -13,37 +13,16 @@ load_dotenv()
 
 def get_db_connection():
     try:
-        # Create a temporary file for the CA certificate
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pem') as tmp:
-            # Get the certificate from secrets
-            ca_cert = st.secrets.get("CA_CERT", "")
-            if not ca_cert:
-                st.error("CA certificate not found in secrets. Please check your Streamlit Cloud settings.")
-                return None
-                
-            # Write the certificate to the temporary file
-            tmp.write(ca_cert.encode())
-            tmp.flush()
-            
-            # Create SSL context
-            ssl_context = ssl.create_default_context()
-            ssl_context.verify_mode = ssl.CERT_REQUIRED
-            
-            # Connect to the database
-            conn = mysql.connector.connect(
-                host=st.secrets["DB_HOST"],
-                port=int(st.secrets["DB_PORT"]),
-                user=st.secrets["DB_USER"],
-                password=st.secrets["DB_PASSWORD"],
-                database=st.secrets["DB_NAME"],
-                ssl_ca=tmp.name,
-                ssl_verify_cert=True,
-                ssl_disabled=False
-            )
-            
-            # Clean up the temporary file
-            os.unlink(tmp.name)
-            return conn
+        # Connect to the database
+        conn = mysql.connector.connect(
+            host=st.secrets["DB_HOST"],
+            port=int(st.secrets["DB_PORT"]),
+            user=st.secrets["DB_USER"],
+            password=st.secrets["DB_PASSWORD"],
+            database=st.secrets["DB_NAME"],
+            ssl_disabled=False
+        )
+        return conn
     except Exception as e:
         st.error(f"Database connection error: {str(e)}")
         return None
